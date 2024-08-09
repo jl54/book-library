@@ -1,0 +1,43 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - backend
+
+  postgres:
+    image: postgres:16.4
+    restart: unless-stopped
+    shm_size: 128mb
+    volumes:
+      - book-library-dbdata:/var/lib/postgresql/data
+      - ./postgres.conf:/etc/postgresql/postgresql.conf
+    environment:
+      - POSTGRES_USER=book-library
+      - POSTGRES_PASSWORD=development
+    ports:
+      - "5432:5432"
+    networks:
+      - backend
+
+  adminer:
+    image: adminer:latest
+    restart: unless-stopped
+    ports:
+      - "8090:8080"
+    networks:
+      - backend
+
+networks:
+  backend:
+
+volumes:
+  book-library-dbdata:
+    driver: local
