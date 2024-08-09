@@ -18,7 +18,6 @@ services:
     shm_size: 128mb
     volumes:
       - book-library-dbdata:/var/lib/postgresql/data
-      - ./postgres.conf:/etc/postgresql/postgresql.conf
     environment:
       - POSTGRES_USER=book-library
       - POSTGRES_PASSWORD=development
