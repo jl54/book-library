@@ -1,11 +1,15 @@
 package main
 
 import (
+	"book-library/book"
+	"book-library/db"
 	"encoding/json"
 	"net/http"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var books = []Book{
+var books = []book.Book{
 	{
 		Id:    1,
 		Title: "Mistborn: The Final Empire",
@@ -21,7 +25,11 @@ var books = []Book{
 }
 
 type BookResponse struct {
-	Data []Book `json:"data"`
+	Data []book.Book `json:"data"`
+}
+
+type BookHandler struct {
+	dbpool *pgxpool.Pool
 }
 
 func getBooks(w http.ResponseWriter, r *http.Request) {
@@ -36,6 +44,31 @@ func getBooks(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func registerRoutes() {
+func (bh *BookHandler) createBook(w http.ResponseWriter, r *http.Request) {
+	bookStore := db.PgBookStore{}
+
+	var newBook book.Book
+	var err error
+	err = json.NewDecoder(r.Body).Decode(&newBook)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	err = bookStore.InsertBookIntoDatabase(bh.dbpool, newBook)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	w.WriteHeader(http.StatusCreated)
+}
+
+func registerRoutes(dbpool *pgxpool.Pool) {
+	bookHandler := &BookHandler{
+		dbpool: dbpool,
+	}
+
 	http.HandleFunc("/books", getBooks)
+	http.HandleFunc("/create", bookHandler.createBook)
 }

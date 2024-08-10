@@ -9,7 +9,7 @@ RUN go mod tidy
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -v -o /app/book-library ./...
+RUN CGO_ENABLED=0 go build
 
 
 FROM scratch

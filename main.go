@@ -1,13 +1,11 @@
 package main
 
 import (
-	"context"
+	"book-library/db"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type SimpleResponse struct {
@@ -16,27 +14,17 @@ type SimpleResponse struct {
 }
 
 func main() {
-	dbpool, err := pgxpool.New(context.Background(), os.Getenv("DATABASE_URL"))
+	dbpool, err := db.NewPostgres()
 
 	if err != nil {
+		log.Fatalf("Unable to create connection pool: %v\n", err)
 		fmt.Fprintf(os.Stderr, "Unable to create connection pool: %v\n", err)
 		os.Exit(1)
 	}
 
 	defer dbpool.Close()
 
-	var greeting string
-
-	err = dbpool.QueryRow(context.Background(), "SELECT 'Hello World!'").Scan(&greeting)
-
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "QueryRow failed: %v\n", err)
-		os.Exit(1)
-	}
-
-	fmt.Println(greeting)
-
-	registerRoutes()
+	registerRoutes(dbpool)
 
 	// ListenAndServe always returns an error,
 	// since it only returns when an unexpected error occurs.
