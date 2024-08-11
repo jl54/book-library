@@ -45,7 +45,9 @@ func getBooks(w http.ResponseWriter, r *http.Request) {
 }
 
 func (bh *BookHandler) createBook(w http.ResponseWriter, r *http.Request) {
-	bookStore := db.PgBookStore{}
+	var bookDb db.DBAction[book.Book] = &db.BookDB{
+		DbPool: bh.dbpool,
+	}
 
 	var newBook book.Book
 	var err error
@@ -55,7 +57,7 @@ func (bh *BookHandler) createBook(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
-	err = bookStore.InsertBookIntoDatabase(bh.dbpool, newBook)
+	err = bookDb.Insert(newBook)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
